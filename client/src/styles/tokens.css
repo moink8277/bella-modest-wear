@@ -1,0 +1,119 @@
+/* ============================================================
+   BELLA MODEST WEAR — DESIGN TOKEN SYSTEM
+   Single source of truth for color, type, spacing, motion.
+   Do not hardcode hex values in components — reference these.
+   ============================================================ */
+
+@theme {
+  /* ---- Color: base surfaces ---- */
+  --color-ivory: #fbf6ee;
+  --color-cream: #f6efe1;
+  --color-beige: #e6d8c3;
+  --color-beige-dark: #d3bf9f;
+
+  /* ---- Color: accents ---- */
+  --color-gold: #b8935a;
+  --color-gold-light: #dcbd8c;
+  --color-gold-dark: #8f6f3f;
+  --color-emerald: #1f4d3e;
+  --color-emerald-light: #366653;
+  --color-maroon: #5c1a2b;
+  --color-maroon-light: #7a2c3f;
+  --color-bronze: #8c6239;
+
+  /* ---- Color: ink / neutrals ---- */
+  --color-espresso: #2b1c14;
+  --color-ink: #241b14;
+  --color-ink-soft: #4a3b30;
+  --color-muted: #8a7b6c;
+  --color-border: #e2d4bf;
+  --color-white: #ffffff;
+
+  /* ---- Typography ---- */
+  --font-display: "Cormorant Garamond", "Noto Naskh Arabic", serif;
+  --font-body: "Jost", "Noto Naskh Arabic", sans-serif;
+  --font-arabic: "Noto Naskh Arabic", serif;
+  --font-urdu: "Noto Nastaliq Urdu", serif;
+
+  /* ---- Radius ---- */
+  --radius-bmw: 2px;
+  --radius-bmw-lg: 4px;
+
+  /* ---- Shadow ---- */
+  --shadow-bmw: 0 2px 28px rgba(43, 28, 20, 0.08);
+  --shadow-bmw-lg: 0 12px 48px rgba(43, 28, 20, 0.16);
+
+  /* ---- Easing ---- */
+  --ease-luxury: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-ivory);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    color: var(--color-espresso);
+    letter-spacing: 0.01em;
+  }
+
+  ::selection {
+    background: var(--color-gold-light);
+    color: var(--color-espresso);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-gold);
+    outline-offset: 2px;
+  }
+
+  [dir="rtl"] body {
+    font-family: var(--font-arabic);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .tracking-label {
+    letter-spacing: 0.18em;
+  }
+
+  /* Subtle Arabian lattice divider — the signature decorative motif */
+  .bmw-lattice-divider {
+    background-image: repeating-linear-gradient(
+      45deg,
+      var(--color-gold-light) 0,
+      var(--color-gold-light) 1px,
+      transparent 1px,
+      transparent 10px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      var(--color-gold-light) 0,
+      var(--color-gold-light) 1px,
+      transparent 1px,
+      transparent 10px
+    );
+    opacity: 0.35;
+  }
+}
