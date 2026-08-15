@@ -5,6 +5,7 @@ const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 export const api = axios.create({
   baseURL: BASE_URL,
   timeout: 15000,
+  withCredentials: true,
   headers: { 'Content-Type': 'application/json' },
 });
 
@@ -47,8 +48,8 @@ api.interceptors.response.use(
         (error.code === 'ECONNABORTED'
           ? 'Request timed out. Please try again.'
           : !error.response
-          ? 'Network error. Please check your connection.'
-          : 'Something went wrong. Please try again.'),
+            ? 'Network error. Please check your connection.'
+            : 'Something went wrong. Please try again.'),
       status: error.response?.status,
       errors: error.response?.data?.errors,
     };

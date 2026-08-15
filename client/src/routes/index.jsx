@@ -14,7 +14,7 @@ import ResetPassword from '@/pages/auth/ResetPassword';
 import VerifyEmail from '@/pages/auth/VerifyEmail';
 import AdminLogin from '@/pages/auth/AdminLogin';
 import NotFound from '@/pages/NotFound';
-
+import AccountOverview from '@/pages/account/Overview';
 const placeholders = [
   { path: 'shop', title: 'Shop', note: 'Full catalog with filters arrives with the product API.' },
   { path: 'categories', title: 'Categories', note: 'Category browsing arrives with the product API.' },
@@ -102,7 +102,7 @@ export const router = createBrowserRouter([
         element: <AccountLayout />,
         children: accountPages.map(({ path, title, note }) => ({
           ...(path === '' ? { index: true } : { path }),
-          element: <PlaceholderPage title={title} note={note} />,
+          element: path === '' ? <AccountOverview /> : <PlaceholderPage title={title} note={note} />,
           handle: { title },
         })),
       },
