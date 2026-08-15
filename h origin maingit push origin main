@@ -1,0 +1,703 @@
+[1mdiff --git a/client/src/pages/customer/Shop.jsx b/client/src/pages/customer/Shop.jsx[m
+[1mindex e69de29..241d22a 100644[m
+[1m--- a/client/src/pages/customer/Shop.jsx[m
+[1m+++ b/client/src/pages/customer/Shop.jsx[m
+[36m@@ -0,0 +1,167 @@[m
+[32m+[m[32mimport { useCallback, useMemo } from 'react';[m
+[32m+[m[32mimport { useSearchParams, Link } from 'react-router-dom';[m
+[32m+[m[32mimport Container from '@/components/ui/Container';[m
+[32m+[m[32mimport Breadcrumb from '@/components/ui/Breadcrumb';[m
+[32m+[m[32mimport ProductCard from '@/components/ui/ProductCard';[m
+[32m+[m[32mimport Select from '@/components/ui/Select';[m
+[32m+[m[32mimport Pagination from '@/components/ui/Pagination';[m
+[32m+[m[32mimport Skeleton from '@/components/ui/Skeleton';[m
+[32m+[m[32mimport EmptyState from '@/components/ui/EmptyState';[m
+[32m+[m[32mimport ErrorState from '@/components/ui/ErrorState';[m
+[32m+[m[32mimport SEO from '@/components/common/SEO';[m
+[32m+[m[32mimport { useFetch } from '@/hooks/useFetch';[m
+[32m+[m[32mimport { useWishlist } from '@/hooks/useWishlist';[m
+[32m+[m[32mimport { getProducts } from '@/services/productService';[m
+[32m+[m[32mimport { getCategories } from '@/services/categoryService';[m
+[32m+[m[32mimport { PackageSearch } from 'lucide-react';[m
+[32m+[m
+[32m+[m[32mconst SORT_OPTIONS = [[m
+[32m+[m[32m    { value: 'newest', label: 'Newest' },[m
+[32m+[m[32m    { value: 'price_asc', label: 'Price: Low to High' },[m
+[32m+[m[32m    { value: 'price_desc', label: 'Price: High to Low' },[m
+[32m+[m[32m    { value: 'name_asc', label: 'Name: A to Z' },[m
+[32m+[m[32m];[m
+[32m+[m
+[32m+[m[32m/** Normalizes the API's snake_case product shape into what ProductCard expects. */[m
+[32m+[m[32mfunction mapProduct(p) {[m
+[32m+[m[32m    return {[m
+[32m+[m[32m        productId: p.id,[m
+[32m+[m[32m        slug: p.slug,[m
+[32m+[m[32m        name: p.name,[m
+[32m+[m[32m        price: Number(p.price),[m
+[32m+[m[32m        salePrice: p.sale_price ? Number(p.sale_price) : undefined,[m
+[32m+[m[32m        image: p.image,[m
+[32m+[m[32m        isNew: !!p.is_new,[m
+[32m+[m[32m        isBestseller: !!p.is_bestseller,[m
+[32m+[m[32m        inStock: p.stock_quantity > 0,[m
+[32m+[m[32m    };[m
+[32m+[m[32m}[m
+[32m+[m
+[32m+[m[32mexport default function Shop() {[m
+[32m+[m[32m    const [searchParams, setSearchParams] = useSearchParams();[m
+[32m+[m[32m    const { isInWishlist, toggleItem } = useWishlist();[m
+[32m+[m
+[32m+[m[32m    const category = searchParams.get('category') || '';[m
+[32m+[m[32m    const sort = searchParams.get('sort') || 'newest';[m
+[32m+[m[32m    const page = parseInt(searchParams.get('page'), 10) || 1;[m
+[32m+[m
+[32m+[m[32m    const updateParam = (key, value) => {[m
+[32m+[m[32m        const next = new URLSearchParams(searchParams);[m
+[32m+[m[32m        if (value) {[m
+[32m+[m[32m            next.set(key, value);[m
+[32m+[m[32m        } else {[m
+[32m+[m[32m            next.delete(key);[m
+[32m+[m[32m        }[m
+[32m+[m[32m        if (key !== 'page') next.delete('page');[m
+[32m+[m[32m        setSearchParams(next);[m
+[32m+[m[32m    };[m
+[32m+[m
+[32m+[m[32m    const fetchProducts = useCallback([m
+[32m+[m[32m        () => getProducts({ category: category || undefined, sort, page, limit: 12 }),[m
+[32m+[m[32m        [category, sort, page][m
+[32m+[m[32m    );[m
+[32m+[m[32m    const { data: productsRes, isLoading, error, refetch } = useFetch(fetchProducts);[m
+[32m+[m
+[32m+[m[32m    const fetchCategories = useCallback(() => getCategories(), []);[m
+[32m+[m[32m    const { data: categoriesRes } = useFetch(fetchCategories);[m
+[32m+[m
+[32m+[m[32m    const products = useMemo([m
+[32m+[m[32m        () => (productsRes?.data?.products || []).map(mapProduct),[m
+[32m+[m[32m        [productsRes][m
+[32m+[m[32m    );[m
+[32m+[m[32m    const pagination = productsRes?.data?.pagination;[m
+[32m+[m[32m    const categories = categoriesRes?.data || [];[m
+[32m+[m
+[32m+[m[32m    const activeCategoryName = categories.find((c) => c.slug === category)?.name;[m
+[32m+[m
+[32m+[m[32m    return ([m
+[32m+[m[32m        <Container className="py-10 sm:py-14">[m
+[32m+[m[32m            <SEO title="Shop" path="/shop" />[m
+[32m+[m
+[32m+[m[32m            <Breadcrumb items={[{ label: 'Shop' }]} className="mb-6" />[m
+[32m+[m
+[32m+[m[32m            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">[m
+[32m+[m[32m                <h1 className="font-display text-3xl sm:text-4xl text-espresso">[m
+[32m+[m[32m                    {activeCategoryName || 'Shop All'}[m
+[32m+[m[32m                </h1>[m
+[32m+[m[32m                <div className="w-full sm:w-56">[m
+[32m+[m[32m                    <Select[m
+[32m+[m[32m                        options={SORT_OPTIONS}[m
+[32m+[m[32m                        value={sort}[m
+[32m+[m[32m                        onChange={(e) => updateParam('sort', e.target.value)}[m
+[32m+[m[32m                        aria-label="Sort products"[m
+[32m+[m[32m                    />[m
+[32m+[m[32m                </div>[m
+[32m+[m[32m            </div>[m
+[32m+[m
+[32m+[m[32m            <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-8 items-start">[m
+[32m+[m[32m                <aside className="flex flex-col gap-1">[m
+[32m+[m[32m                    <span className="text-xs uppercase tracking-label text-ink-soft mb-2">[m
+[32m+[m[32m                        Categories[m
+[32m+[m[32m                    </span>[m
+[32m+[m[32m                    <button[m
+[32m+[m[32m                        type="button"[m
+[32m+[m[32m                        onClick={() => updateParam('category', '')}[m
+[32m+[m[32m                        className={`text-left text-sm py-1.5 transition-colors ${!category ? 'text-gold-dark font-medium' : 'text-ink-soft hover:text-gold-dark'[m
+[32m+[m[32m                            }`}[m
+[32m+[m[32m                    >[m
+[32m+[m[32m                        All[m
+[32m+[m[32m                    </button>[m
+[32m+[m[32m                    {categories.map((cat) => ([m
+[32m+[m[32m                        <button[m
+[32m+[m[32m                            key={cat.id}[m
+[32m+[m[32m                            type="button"[m
+[32m+[m[32m                            onClick={() => updateParam('category', cat.slug)}[m
+[32m+[m[32m                            className={`text-left text-sm py-1.5 transition-colors ${category === cat.slug[m
+[32m+[m[32m                                    ? 'text-gold-dark font-medium'[m
+[32m+[m[32m                                    : 'text-ink-soft hover:text-gold-dark'[m
+[32m+[m[32m                                }`}[m
+[32m+[m[32m                        >[m
+[32m+[m[32m                            {cat.name}[m
+[32m+[m[32m                        </button>[m
+[32m+[m[32m                    ))}[m
+[32m+[m[32m                </aside>[m
+[32m+[m
+[32m+[m[32m                <div>[m
+[32m+[m[32m                    {isLoading ? ([m
+[32m+[m[32m                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-5">[m
+[32m+[m[32m                            {Array.from({ length: 6 }).map((_, i) => ([m
+[32m+[m[32m                                <Skeleton key={i} className="aspect-[3/4]" />[m
+[32m+[m[32m                            ))}[m
+[32m+[m[32m                        </div>[m
+[32m+[m[32m                    ) : error ? ([m
+[32m+[m[32m                        <ErrorState message={error.message} onRetry={refetch} />[m
+[32m+[m[32m                    ) : products.length === 0 ? ([m
+[32m+[m[32m                        <EmptyState[m
+[32m+[m[32m                            icon={PackageSearch}[m
+[32m+[m[32m                            title="No products found"[m
+[32m+[m[32m                            description="Try a different category or check back soon as we add new pieces."[m
+[32m+[m[32m                        />[m
+[32m+[m[32m                    ) : ([m
+[32m+[m[32m                        <>[m
+[32m+[m[32m                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-5">[m
+[32m+[m[32m                                {products.map((product) => ([m
+[32m+[m[32m                                    <ProductCard[m
+[32m+[m[32m                                        key={product.productId}[m
+[32m+[m[32m                                        product={product}[m
+[32m+[m[32m                                        isWishlisted={isInWishlist(product.productId)}[m
+[32m+[m[32m                                        onToggleWishlist={() => toggleItem(product)}[m
+[32m+[m[32m                                    />[m
+[32m+[m[32m                                ))}[m
+[32m+[m[32m                            </div>[m
+[32m+[m
+[32m+[m[32m                            {pagination && pagination.totalPages > 1 && ([m
+[32m+[m[32m                                <Pagination[m
+[32m+[m[32m                                    page={pagination.page}[m
+[32m+[m[32m                                    totalPages={pagination.totalPages}[m
+[32m+[m[32m                                    onPageChange={(p) => updateParam('page', String(p))}[m
+[32m+[m[32m                                    className="mt-10"[m
+[32m+[m[32m                                />[m
+[32m+[m[32m                            )}[m
+[32m+[m[32m                        </>[m
+[32m+[m[32m                    )}[m
+[32m+[m[32m                </div>[m
+[32m+[m[32m            </div>[m
+[32m+[m[32m        </Container>[m
+[32m+[m[32m    );[m
+[32m+[m[32m}[m
+\ No newline at end of file[m
+[1mdiff --git a/client/src/routes/index.jsx b/client/src/routes/index.jsx[m
+[1mindex f8ed104..c0e4399 100644[m
+[1m--- a/client/src/routes/index.jsx[m
+[1m+++ b/client/src/routes/index.jsx[m
+[36m@@ -23,6 +23,7 @@[m [mimport AccountOrderDetail from '@/pages/account/OrderDetail';[m
+ import AccountWishlist from '@/pages/account/Wishlist';[m
+ import AccountProfile from '@/pages/account/Profile';[m
+ import AccountSecurity from '@/pages/account/Security';[m
+[32m+[m[32mimport Shop from '@/pages/customer/Shop';[m
+ [m
+ // Top-level customer pages under MainLayout — real pages get added to[m
+ // REAL_PAGES below as they're built; everything else still falls back to[m
+[36m@@ -45,6 +46,7 @@[m [mconst REAL_PAGES = {[m
+   cart: <Cart />,[m
+   about: <About />,[m
+   wishlist: <Wishlist />,[m
+[32m+[m[32m  shop: <Shop />,[m
+ };[m
+ [m
+ // /account/* — real pages get added to REAL_ACCOUNT_PAGES below as they're built;[m
+[1mdiff --git a/server/src/controllers/category.controller.js b/server/src/controllers/category.controller.js[m
+[1mindex e69de29..7b59719 100644[m
+[1m--- a/server/src/controllers/category.controller.js[m
+[1m+++ b/server/src/controllers/category.controller.js[m
+[36m@@ -0,0 +1,41 @@[m
+[32m+[m[32mconst ApiError = require('../utils/ApiError');[m
+[32m+[m[32mconst ApiResponse = require('../utils/ApiResponse');[m
+[32m+[m[32mconst asyncHandler = require('../utils/asyncHandler');[m
+[32m+[m
+[32m+[m[32mconst categoryModel = require('../models/Category.model');[m
+[32m+[m
+[32m+[m[32m// GET /api/categories — full nested tree (top-level categories + subcategories)[m
+[32m+[m[32mconst getCategories = asyncHandler(async (req, res) => {[m
+[32m+[m[32m    const tree = await categoryModel.findTree();[m
+[32m+[m[32m    res.status(200).json(new ApiResponse(200, tree, 'Categories fetched'));[m
+[32m+[m[32m});[m
+[32m+[m
+[32m+[m[32m// GET /api/categories/:slug — single category with its subcategories[m
+[32m+[m[32mconst getCategoryBySlug = asyncHandler(async (req, res) => {[m
+[32m+[m[32m    const category = await categoryModel.findBySlug(req.params.slug);[m
+[32m+[m[32m    if (!category) {[m
+[32m+[m[32m        throw ApiError.notFound('Category not found');[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    const subcategories = await categoryModel.findSubcategories(category.id);[m
+[32m+[m[32m    res.status(200).json([m
+[32m+[m[32m        new ApiResponse(200, { ...category, subcategories }, 'Category fetched')[m
+[32m+[m[32m    );[m
+[32m+[m[32m});[m
+[32m+[m
+[32m+[m[32m// GET /api/categories/:categorySlug/subcategories — used for /shop filter dropdowns[m
+[32m+[m[32mconst getSubcategories = asyncHandler(async (req, res) => {[m
+[32m+[m[32m    const category = await categoryModel.findBySlug(req.params.categorySlug);[m
+[32m+[m[32m    if (!category) {[m
+[32m+[m[32m        throw ApiError.notFound('Category not found');[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    const subcategories = await categoryModel.findSubcategories(category.id);[m
+[32m+[m[32m    res.status(200).json(new ApiResponse(200, subcategories, 'Subcategories fetched'));[m
+[32m+[m[32m});[m
+[32m+[m
+[32m+[m[32mmodule.exports = {[m
+[32m+[m[32m    getCategories,[m
+[32m+[m[32m    getCategoryBySlug,[m
+[32m+[m[32m    getSubcategories,[m
+[32m+[m[32m};[m
+\ No newline at end of file[m
+[1mdiff --git a/server/src/controllers/product.controller.js b/server/src/controllers/product.controller.js[m
+[1mindex e69de29..fc2fa02 100644[m
+[1m--- a/server/src/controllers/product.controller.js[m
+[1m+++ b/server/src/controllers/product.controller.js[m
+[36m@@ -0,0 +1,80 @@[m
+[32m+[m[32mconst ApiError = require('../utils/ApiError');[m
+[32m+[m[32mconst ApiResponse = require('../utils/ApiResponse');[m
+[32m+[m[32mconst asyncHandler = require('../utils/asyncHandler');[m
+[32m+[m
+[32m+[m[32mconst productModel = require('../models/Product.model');[m
+[32m+[m
+[32m+[m[32m// GET /api/products — paginated, filtered list for /shop[m
+[32m+[m[32mconst getProducts = asyncHandler(async (req, res) => {[m
+[32m+[m[32m    const filters = {[m
+[32m+[m[32m        category: req.query.category,[m
+[32m+[m[32m        subcategory: req.query.subcategory,[m
+[32m+[m[32m        size: req.query.size,[m
+[32m+[m[32m        color: req.query.color,[m
+[32m+[m[32m        minPrice: req.query.minPrice,[m
+[32m+[m[32m        maxPrice: req.query.maxPrice,[m
+[32m+[m[32m        tag: req.query.tag,[m
+[32m+[m[32m        sort: req.query.sort,[m
+[32m+[m[32m        search: req.query.search,[m
+[32m+[m[32m        page: req.query.page,[m
+[32m+[m[32m        limit: req.query.limit,[m
+[32m+[m[32m    };[m
+[32m+[m
+[32m+[m[32m    const [{ products, page, limit }, total] = await Promise.all([[m
+[32m+[m[32m        productModel.findAll(filters),[m
+[32m+[m[32m        productModel.count(filters),[m
+[32m+[m[32m    ]);[m
+[32m+[m
+[32m+[m[32m    res.status(200).json([m
+[32m+[m[32m        new ApiResponse(200, {[m
+[32m+[m[32m            products,[m
+[32m+[m[32m            pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },[m
+[32m+[m[32m        }, 'Products fetched')[m
+[32m+[m[32m    );[m
+[32m+[m[32m});[m
+[32m+[m
+[32m+[m[32m// GET /api/products/featured?type=&limit= — homepage collections[m
+[32m+[m[32m// NOTE: registered before /:slug in routes so "featured" isn't read as a slug.[m
+[32m+[m[32mconst getFeaturedProducts = asyncHandler(async (req, res) => {[m
+[32m+[m[32m    const { type = 'featured', limit } = req.query;[m
+[32m+[m[32m    const products = await productModel.findFeatured(type, limit ? parseInt(limit, 10) : 8);[m
+[32m+[m[32m    res.status(200).json(new ApiResponse(200, products, 'Featured products fetched'));[m
+[32m+[m[32m});[m
+[32m+[m
+[32m+[m[32m// GET /api/products/search?q=&limit= — search bar autocomplete[m
+[32m+[m[32m// NOTE: also registered before /:slug for the same reason.[m
+[32m+[m[32mconst searchProducts = asyncHandler(async (req, res) => {[m
+[32m+[m[32m    const { q, limit } = req.query;[m
+[32m+[m[32m    if (!q || !q.trim()) {[m
+[32m+[m[32m        return res.status(200).json(new ApiResponse(200, [], 'No query provided'));[m
+[32m+[m[32m    }[m
+[32m+[m[32m    const products = await productModel.search(q.trim(), limit ? parseInt(limit, 10) : 6);[m
+[32m+[m[32m    res.status(200).json(new ApiResponse(200, products, 'Search results fetched'));[m
+[32m+[m[32m});[m
+[32m+[m
+[32m+[m[32m// GET /api/products/:slug — full detail page[m
+[32m+[m[32mconst getProductBySlug = asyncHandler(async (req, res) => {[m
+[32m+[m[32m    const product = await productModel.findBySlug(req.params.slug);[m
+[32m+[m[32m    if (!product) {[m
+[32m+[m[32m        throw ApiError.notFound('Product not found');[m
+[32m+[m[32m    }[m
+[32m+[m[32m    res.status(200).json(new ApiResponse(200, product, 'Product fetched'));[m
+[32m+[m[32m});[m
+[32m+[m
+[32m+[m[32m// GET /api/products/:productId/related?limit= — related products for the detail page[m
+[32m+[m[32mconst getRelatedProducts = asyncHandler(async (req, res) => {[m
+[32m+[m[32m    const { limit } = req.query;[m
+[32m+[m[32m    const products = await productModel.findRelated([m
+[32m+[m[32m        req.params.productId,[m
+[32m+[m[32m        limit ? parseInt(limit, 10) : 8[m
+[32m+[m[32m    );[m
+[32m+[m[32m    res.status(200).json(new ApiResponse(200, products, 'Related products fetched'));[m
+[32m+[m[32m});[m
+[32m+[m
+[32m+[m[32mmodule.exports = {[m
+[32m+[m[32m    getProducts,[m
+[32m+[m[32m    getFeaturedProducts,[m
+[32m+[m[32m    searchProducts,[m
+[32m+[m[32m    getProductBySlug,[m
+[32m+[m[32m    getRelatedProducts,[m
+[32m+[m[32m};[m
+\ No newline at end of file[m
+[1mdiff --git a/server/src/models/Category.model.js b/server/src/models/Category.model.js[m
+[1mindex e69de29..7b7e5f7 100644[m
+[1m--- a/server/src/models/Category.model.js[m
+[1m+++ b/server/src/models/Category.model.js[m
+[36m@@ -0,0 +1,66 @@[m
+[32m+[m[32mconst { pool } = require('../config/db');[m
+[32m+[m
+[32m+[m[32m/**[m
+[32m+[m[32m * Raw DB access for the `categories` table. Self-referencing via `parent_id`[m
+[32m+[m[32m * (top-level categories have parent_id = NULL, subcategories point to their[m
+[32m+[m[32m * parent's id). Controllers/services call these — no SQL anywhere else.[m
+[32m+[m[32m */[m
+[32m+[m
+[32m+[m[32masync function findAllActive() {[m
+[32m+[m[32m    const [rows] = await pool.execute([m
+[32m+[m[32m        `SELECT * FROM categories WHERE is_active = TRUE ORDER BY display_order ASC, name ASC`[m
+[32m+[m[32m    );[m
+[32m+[m[32m    return rows;[m
+[32m+[m[32m}[m
+[32m+[m
+[32m+[m[32m/**[m
+[32m+[m[32m * Full nested tree: top-level categories, each with a `subcategories` array.[m
+[32m+[m[32m * Built in-memory from a single flat query rather than N+1 queries.[m
+[32m+[m[32m */[m
+[32m+[m[32masync function findTree() {[m
+[32m+[m[32m    const flat = await findAllActive();[m
+[32m+[m[32m    const byId = new Map(flat.map((cat) => [cat.id, { ...cat, subcategories: [] }]));[m
+[32m+[m[32m    const tree = [];[m
+[32m+[m
+[32m+[m[32m    for (const cat of byId.values()) {[m
+[32m+[m[32m        if (cat.parent_id && byId.has(cat.parent_id)) {[m
+[32m+[m[32m            byId.get(cat.parent_id).subcategories.push(cat);[m
+[32m+[m[32m        } else {[m
+[32m+[m[32m            tree.push(cat);[m
+[32m+[m[32m        }[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    return tree;[m
+[32m+[m[32m}[m
+[32m+[m
+[32m+[m[32masync function findBySlug(slug) {[m
+[32m+[m[32m    const [rows] = await pool.execute([m
+[32m+[m[32m        `SELECT * FROM categories WHERE slug = ? AND is_active = TRUE LIMIT 1`,[m
+[32m+[m[32m        [slug][m
+[32m+[m[32m    );[m
+[32m+[m[32m    return rows[0] || null;[m
+[32m+[m[32m}[m
+[32m+[m
+[32m+[m[32masync function findById(id) {[m
+[32m+[m[32m    const [rows] = await pool.execute([m
+[32m+[m[32m        `SELECT * FROM categories WHERE id = ? LIMIT 1`,[m
+[32m+[m[32m        [id][m
+[32m+[m[32m    );[m
+[32m+[m[32m    return rows[0] || null;[m
+[32m+[m[32m}[m
+[32m+[m
+[32m+[m[32masync function findSubcategories(parentId) {[m
+[32m+[m[32m    const [rows] = await pool.execute([m
+[32m+[m[32m        `SELECT * FROM categories WHERE parent_id = ? AND is_active = TRUE ORDER BY display_order ASC, name ASC`,[m
+[32m+[m[32m        [parentId][m
+[32m+[m[32m    );[m
+[32m+[m[32m    return rows;[m
+[32m+[m[32m}[m
+[32m+[m
+[32m+[m[32mmodule.exports = {[m
+[32m+[m[32m    findAllActive,[m
+[32m+[m[32m    findTree,[m
+[32m+[m[32m    findBySlug,[m
+[32m+[m[32m    findById,[m
+[32m+[m[32m    findSubcategories,[m
+[32m+[m[32m};[m
+\ No newline at end of file[m
+[1mdiff --git a/server/src/models/Product.model.js b/server/src/models/Product.model.js[m
+[1mindex e69de29..7a60f81 100644[m
+[1m--- a/server/src/models/Product.model.js[m
+[1m+++ b/server/src/models/Product.model.js[m
+[36m@@ -0,0 +1,203 @@[m
+[32m+[m[32mconst { pool } = require('../config/db');[m
+[32m+[m
+[32m+[m[32m/**[m
+[32m+[m[32m * Raw DB access for `products`, joined with `product_images` and[m
+[32m+[m[32m * `product_variants` where needed. Controllers/services call these —[m
+[32m+[m[32m * no SQL anywhere else. All queries use parameterized placeholders (`?`).[m
+[32m+[m[32m */[m
+[32m+[m
+[32m+[m[32mconst SORT_MAP = {[m
+[32m+[m[32m    newest: 'p.created_at DESC',[m
+[32m+[m[32m    price_asc: 'COALESCE(p.sale_price, p.price) ASC',[m
+[32m+[m[32m    price_desc: 'COALESCE(p.sale_price, p.price) DESC',[m
+[32m+[m[32m    name_asc: 'p.name ASC',[m
+[32m+[m[32m    name_desc: 'p.name DESC',[m
+[32m+[m[32m};[m
+[32m+[m
+[32m+[m[32m/**[m
+[32m+[m[32m * Builds a WHERE clause + params array from filter params shared by[m
+[32m+[m[32m * findAll/count, so the two stay in sync.[m
+[32m+[m[32m */[m
+[32m+[m[32mfunction buildFilters(filters) {[m
+[32m+[m[32m    const conditions = ['p.is_active = TRUE'];[m
+[32m+[m[32m    const params = [];[m
+[32m+[m
+[32m+[m[32m    if (filters.category) {[m
+[32m+[m[32m        // Matches products whose category IS this slug, OR whose category's[m
+[32m+[m[32m        // parent IS this slug (so a top-level category also returns its[m
+[32m+[m[32m        // subcategories' products).[m
+[32m+[m[32m        conditions.push(`p.category_id IN ([m
+[32m+[m[32m            SELECT id FROM categories[m
+[32m+[m[32m            WHERE slug = ? OR parent_id = (SELECT id FROM categories WHERE slug = ?)[m
+[32m+[m[32m        )`);[m
+[32m+[m[32m        params.push(filters.category, filters.category);[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    if (filters.subcategory) {[m
+[32m+[m[32m        conditions.push(`p.category_id = (SELECT id FROM categories WHERE slug = ?)`);[m
+[32m+[m[32m        params.push(filters.subcategory);[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    if (filters.size || filters.color) {[m
+[32m+[m[32m        const variantConditions = ['pv.product_id = p.id'];[m
+[32m+[m[32m        if (filters.size) {[m
+[32m+[m[32m            variantConditions.push('pv.size = ?');[m
+[32m+[m[32m            params.push(filters.size);[m
+[32m+[m[32m        }[m
+[32m+[m[32m        if (filters.color) {[m
+[32m+[m[32m            variantConditions.push('pv.color = ?');[m
+[32m+[m[32m            params.push(filters.color);[m
+[32m+[m[32m        }[m
+[32m+[m[32m        conditions.push(`EXISTS (SELECT 1 FROM product_variants pv WHERE ${variantConditions.join(' AND ')})`);[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    if (filters.minPrice) {[m
+[32m+[m[32m        conditions.push('COALESCE(p.sale_price, p.price) >= ?');[m
+[32m+[m[32m        params.push(filters.minPrice);[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    if (filters.maxPrice) {[m
+[32m+[m[32m        conditions.push('COALESCE(p.sale_price, p.price) <= ?');[m
+[32m+[m[32m        params.push(filters.maxPrice);[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    if (filters.tag) {[m
+[32m+[m[32m        conditions.push('p.tags LIKE ?');[m
+[32m+[m[32m        params.push(`%${filters.tag}%`);[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    if (filters.search) {[m
+[32m+[m[32m        conditions.push('(p.name LIKE ? OR p.description LIKE ?)');[m
+[32m+[m[32m        params.push(`%${filters.search}%`, `%${filters.search}%`);[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    return { where: conditions.join(' AND '), params };[m
+[32m+[m[32m}[m
+[32m+[m
+[32m+[m[32m/** Attaches the primary (or first) image to each product in a list. */[m
+[32m+[m[32masync function attachPrimaryImages(products) {[m
+[32m+[m[32m    if (products.length === 0) return products;[m
+[32m+[m
+[32m+[m[32m    const ids = products.map((p) => p.id);[m
+[32m+[m[32m    const placeholders = ids.map(() => '?').join(',');[m
+[32m+[m[32m    const [images] = await pool.query([m
+[32m+[m[32m        `SELECT product_id, url FROM product_images[m
+[32m+[m[32m         WHERE product_id IN (${placeholders})[m
+[32m+[m[32m         ORDER BY is_primary DESC, display_order ASC`,[m
+[32m+[m[32m        ids[m
+[32m+[m[32m    );[m
+[32m+[m
+[32m+[m[32m    const imageByProduct = new Map();[m
+[32m+[m[32m    for (const img of images) {[m
+[32m+[m[32m        if (!imageByProduct.has(img.product_id)) {[m
+[32m+[m[32m            imageByProduct.set(img.product_id, img.url);[m
+[32m+[m[32m        }[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    return products.map((p) => ({ ...p, image: imageByProduct.get(p.id) || null }));[m
+[32m+[m[32m}[m
+[32m+[m
+[32m+[m[32m/** Paginated, filtered product list for /shop. */[m
+[32m+[m[32masync function findAll(filters = {}) {[m
+[32m+[m[32m    const { where, params } = buildFilters(filters);[m
+[32m+[m[32m    const sortClause = SORT_MAP[filters.sort] || SORT_MAP.newest;[m
+[32m+[m[32m    const limit = Math.min(parseInt(filters.limit, 10) || 20, 100);[m
+[32m+[m[32m    const page = Math.max(parseInt(filters.page, 10) || 1, 1);[m
+[32m+[m[32m    const offset = (page - 1) * limit;[m
+[32m+[m
+[32m+[m[32m    const [rows] = await pool.query([m
+[32m+[m[32m        `SELECT p.* FROM products p WHERE ${where} ORDER BY ${sortClause} LIMIT ? OFFSET ?`,[m
+[32m+[m[32m        [...params, limit, offset][m
+[32m+[m[32m    );[m
+[32m+[m
+[32m+[m[32m    const products = await attachPrimaryImages(rows);[m
+[32m+[m[32m    return { products, page, limit };[m
+[32m+[m[32m}[m
+[32m+[m
+[32m+[m[32m/** Total count matching the same filters, for pagination metadata. */[m
+[32m+[m[32masync function count(filters = {}) {[m
+[32m+[m[32m    const { where, params } = buildFilters(filters);[m
+[32m+[m[32m    const [rows] = await pool.query([m
+[32m+[m[32m        `SELECT COUNT(*) AS total FROM products p WHERE ${where}`,[m
+[32m+[m[32m        params[m
+[32m+[m[32m    );[m
+[32m+[m[32m    return rows[0].total;[m
+[32m+[m[32m}[m
+[32m+[m
+[32m+[m[32m/** Full detail for the product page: base fields + all images + all variants. */[m
+[32m+[m[32masync function findBySlug(slug) {[m
+[32m+[m[32m    const [rows] = await pool.execute([m
+[32m+[m[32m        `SELECT * FROM products WHERE slug = ? AND is_active = TRUE LIMIT 1`,[m
+[32m+[m[32m        [slug][m
+[32m+[m[32m    );[m
+[32m+[m[32m    const product = rows[0];[m
+[32m+[m[32m    if (!product) return null;[m
+[32m+[m
+[32m+[m[32m    const [images] = await pool.execute([m
+[32m+[m[32m        `SELECT id, url, alt_text, is_primary FROM product_images[m
+[32m+[m[32m         WHERE product_id = ? ORDER BY is_primary DESC, display_order ASC`,[m
+[32m+[m[32m        [product.id][m
+[32m+[m[32m    );[m
+[32m+[m[32m    const [variants] = await pool.execute([m
+[32m+[m[32m        `SELECT id, size, color, color_hex, stock_quantity, price_adjustment[m
+[32m+[m[32m         FROM product_variants WHERE product_id = ?`,[m
+[32m+[m[32m        [product.id][m
+[32m+[m[32m    );[m
+[32m+[m
+[32m+[m[32m    return { ...product, images, variants };[m
+[32m+[m[32m}[m
+[32m+[m
+[32m+[m[32masync function findById(id) {[m
+[32m+[m[32m    const [rows] = await pool.execute([m
+[32m+[m[32m        `SELECT * FROM products WHERE id = ? AND is_active = TRUE LIMIT 1`,[m
+[32m+[m[32m        [id][m
+[32m+[m[32m    );[m
+[32m+[m[32m    return rows[0] || null;[m
+[32m+[m[32m}[m
+[32m+[m
+[32m+[m[32m/** Same category as the given product, excluding itself. */[m
+[32m+[m[32masync function findRelated(productId, limit = 8) {[m
+[32m+[m[32m    const product = await findById(productId);[m
+[32m+[m[32m    if (!product) return [];[m
+[32m+[m
+[32m+[m[32m    const [rows] = await pool.execute([m
+[32m+[m[32m        `SELECT * FROM products[m
+[32m+[m[32m         WHERE category_id = ? AND id != ? AND is_active = TRUE[m
+[32m+[m[32m         ORDER BY created_at DESC LIMIT ?`,[m
+[32m+[m[32m        [product.category_id, productId, limit][m
+[32m+[m[32m    );[m
+[32m+[m[32m    return attachPrimaryImages(rows);[m
+[32m+[m[32m}[m
+[32m+[m
+[32m+[m[32m/** `type`: 'featured' | 'new' | 'bestseller'. */[m
+[32m+[m[32masync function findFeatured(type = 'featured', limit = 8) {[m
+[32m+[m[32m    const columnMap = { featured: 'is_featured', new: 'is_new', bestseller: 'is_bestseller' };[m
+[32m+[m[32m    const column = columnMap[type] || 'is_featured';[m
+[32m+[m
+[32m+[m[32m    const [rows] = await pool.query([m
+[32m+[m[32m        `SELECT * FROM products WHERE ${column} = TRUE AND is_active = TRUE[m
+[32m+[m[32m         ORDER BY created_at DESC LIMIT ?`,[m
+[32m+[m[32m        [limit][m
+[32m+[m[32m    );[m
+[32m+[m[32m    return attachPrimaryImages(rows);[m
+[32m+[m[32m}[m
+[32m+[m
+[32m+[m[32m/** Lightweight autocomplete search — name matches only, capped small. */[m
+[32m+[m[32masync function search(query, limit = 6) {[m
+[32m+[m[32m    const [rows] = await pool.execute([m
+[32m+[m[32m        `SELECT id, name, slug, price, sale_price FROM products[m
+[32m+[m[32m         WHERE name LIKE ? AND is_active = TRUE LIMIT ?`,[m
+[32m+[m[32m        [`%${query}%`, limit][m
+[32m+[m[32m    );[m
+[32m+[m[32m    return attachPrimaryImages(rows);[m
+[32m+[m[32m}[m
+[32m+[m
+[32m+[m[32mmodule.exports = {[m
+[32m+[m[32m    findAll,[m
+[32m+[m[32m    count,[m
+[32m+[m[32m    findBySlug,[m
+[32m+[m[32m    findById,[m
+[32m+[m[32m    findRelated,[m
+[32m+[m[32m    findFeatured,[m
+[32m+[m[32m    search,[m
+[32m+[m[32m};[m
+\ No newline at end of file[m
+[1mdiff --git a/server/src/routes/category.routes.js b/server/src/routes/category.routes.js[m
+[1mindex e69de29..d4bbf58 100644[m
+[1m--- a/server/src/routes/category.routes.js[m
+[1m+++ b/server/src/routes/category.routes.js[m
+[36m@@ -0,0 +1,11 @@[m
+[32m+[m[32mconst express = require('express');[m
+[32m+[m[32mconst categoryController = require('../controllers/category.controller');[m
+[32m+[m
+[32m+[m[32mconst router = express.Router();[m
+[32m+[m
+[32m+[m[32m// All routes here are public — no auth needed to browse categories.[m
+[32m+[m[32mrouter.get('/', categoryController.getCategories);[m
+[32m+[m[32mrouter.get('/:categorySlug/subcategories', categoryController.getSubcategories);[m
+[32m+[m[32mrouter.get('/:slug', categoryController.getCategoryBySlug);[m
+[32m+[m
+[32m+[m[32mmodule.exports = router;[m
+\ No newline at end of file[m
+[1mdiff --git a/server/src/routes/index.js b/server/src/routes/index.js[m
+[1mindex 997a7f8..7fe5b22 100644[m
+[1m--- a/server/src/routes/index.js[m
+[1m+++ b/server/src/routes/index.js[m
+[36m@@ -2,14 +2,15 @@[m [mconst express = require('express');[m
+ const healthRoutes = require('./health.routes');[m
+ const authRoutes = require('./auth.routes');[m
+ const userRoutes = require('./user.routes');[m
+[32m+[m[32mconst categoryRoutes = require('./category.routes');[m
+[32m+[m[32mconst productRoutes = require('./product.routes');[m
+ [m
+ const router = express.Router();[m
+ [m
+ router.use('/health', healthRoutes);[m
+ router.use('/auth', authRoutes);[m
+ router.use('/users', userRoutes);[m
+[31m-[m
+[31m-// Phase 5+: router.use('/products', productRoutes);[m
+[31m-// Phase 5+: router.use('/categories', categoryRoutes);[m
+[32m+[m[32mrouter.use('/categories', categoryRoutes);[m
+[32m+[m[32mrouter.use('/products', productRoutes);[m
+ [m
+ module.exports = router;[m
+\ No newline at end of file[m
+[1mdiff --git a/server/src/routes/product.routes.js b/server/src/routes/product.routes.js[m
+[1mindex e69de29..fd2aea2 100644[m
+[1m--- a/server/src/routes/product.routes.js[m
+[1m+++ b/server/src/routes/product.routes.js[m
+[36m@@ -0,0 +1,17 @@[m
+[32m+[m[32mconst express = require('express');[m
+[32m+[m[32mconst productController = require('../controllers/product.controller');[m
+[32m+[m[32mconst validate = require('../middleware/validate.middleware');[m
+[32m+[m[32mconst { getProductsRules, searchProductsRules } = require('../validators/product.validator');[m
+[32m+[m
+[32m+[m[32mconst router = express.Router();[m
+[32m+[m
+[32m+[m[32m// All routes here are public — no auth needed to browse products.[m
+[32m+[m[32m// IMPORTANT: /featured and /search must come before /:slug, otherwise[m
+[32m+[m[32m// Express would treat "featured"/"search" as a slug value.[m
+[32m+[m[32mrouter.get('/featured', productController.getFeaturedProducts);[m
+[32m+[m[32mrouter.get('/search', searchProductsRules, validate, productController.searchProducts);[m
+[32m+[m[32mrouter.get('/', getProductsRules, validate, productController.getProducts);[m
+[32m+[m[32mrouter.get('/:productId/related', productController.getRelatedProducts);[m
+[32m+[m[32mrouter.get('/:slug', productController.getProductBySlug);[m
+[32m+[m
+[32m+[m[32mmodule.exports = router;[m
+\ No newline at end of file[m
+[1mdiff --git a/server/src/validators/product.validator.js b/server/src/validators/product.validator.js[m
+[1mindex e69de29..6a0791e 100644[m
+[1m--- a/server/src/validators/product.validator.js[m
+[1m+++ b/server/src/validators/product.validator.js[m
+[36m@@ -0,0 +1,26 @@[m
+[32m+[m[32mconst { query } = require('express-validator');[m
+[32m+[m
+[32m+[m[32m/**[m
+[32m+[m[32m * express-validator chains for product routes. Used like:[m
+[32m+[m[32m *   router.get('/', getProductsRules, validate, productController.getProducts)[m
+[32m+[m[32m * All are query-param validators since every product route here is a GET.[m
+[32m+[m[32m */[m
+[32m+[m
+[32m+[m[32mconst getProductsRules = [[m
+[32m+[m[32m    query('minPrice').optional().isFloat({ min: 0 }).withMessage('minPrice must be a positive number'),[m
+[32m+[m[32m    query('maxPrice').optional().isFloat({ min: 0 }).withMessage('maxPrice must be a positive number'),[m
+[32m+[m[32m    query('page').optional().isInt({ min: 1 }).withMessage('page must be a positive integer'),[m
+[32m+[m[32m    query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('limit must be between 1 and 100'),[m
+[32m+[m[32m    query('sort').optional().isIn(['newest', 'price_asc', 'price_desc', 'name_asc', 'name_desc'])[m
+[32m+[m[32m        .withMessage('Invalid sort value'),[m
+[32m+[m[32m];[m
+[32m+[m
+[32m+[m[32mconst searchProductsRules = [[m
+[32m+[m[32m    query('q').notEmpty().withMessage('Search query is required').trim(),[m
+[32m+[m[32m    query('limit').optional().isInt({ min: 1, max: 20 }).withMessage('limit must be between 1 and 20'),[m
+[32m+[m[32m];[m
+[32m+[m
+[32m+[m[32mmodule.exports = {[m
+[32m+[m[32m    getProductsRules,[m
+[32m+[m[32m    searchProductsRules,[m
+[32m+[m[32m};[m
+\ No newline at end of file[m
