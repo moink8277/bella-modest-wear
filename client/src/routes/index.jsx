@@ -7,6 +7,7 @@ import ProtectedRoute from '@/components/common/ProtectedRoute';
 import AdminRoute from '@/components/common/AdminRoute';
 import Home from '@/pages/customer/Home';
 import PlaceholderPage from '@/pages/customer/PlaceholderPage';
+import Cart from '@/pages/customer/Cart';
 import Login from '@/pages/auth/Login';
 import Register from '@/pages/auth/Register';
 import ForgotPassword from '@/pages/auth/ForgotPassword';
@@ -21,6 +22,9 @@ import AccountWishlist from '@/pages/account/Wishlist';
 import AccountProfile from '@/pages/account/Profile';
 import AccountSecurity from '@/pages/account/Security';
 
+// Top-level customer pages under MainLayout — real pages get added to
+// REAL_PAGES below as they're built; everything else still falls back to
+// PlaceholderPage. Same lookup pattern as REAL_ACCOUNT_PAGES below.
 const placeholders = [
   { path: 'shop', title: 'Shop', note: 'Full catalog with filters arrives with the product API.' },
   { path: 'categories', title: 'Categories', note: 'Category browsing arrives with the product API.' },
@@ -32,6 +36,12 @@ const placeholders = [
   { path: 'checkout', title: 'Checkout', note: 'Checkout arrives with the commerce engine.' },
   { path: 'wishlist', title: 'Wishlist', note: 'Wishlist arrives with the commerce engine.' },
 ];
+
+// Real pages built so far for the top-level customer routes above —
+// keyed by the same path strings used in `placeholders`.
+const REAL_PAGES = {
+  cart: <Cart />,
+};
 
 // /account/* — real pages get added to REAL_ACCOUNT_PAGES below as they're built;
 // everything else still falls back to PlaceholderPage.
@@ -89,7 +99,7 @@ export const router = createBrowserRouter([
       { index: true, element: <Home /> },
       ...placeholders.map(({ path, title, note }) => ({
         path,
-        element: <PlaceholderPage title={title} note={note} />,
+        element: REAL_PAGES[path] ?? <PlaceholderPage title={title} note={note} />,
       })),
       { path: '*', element: <NotFound /> },
     ],
