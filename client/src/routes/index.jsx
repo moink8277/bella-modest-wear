@@ -15,6 +15,9 @@ import VerifyEmail from '@/pages/auth/VerifyEmail';
 import AdminLogin from '@/pages/auth/AdminLogin';
 import NotFound from '@/pages/NotFound';
 import AccountOverview from '@/pages/account/Overview';
+import AccountOrders from '@/pages/account/Orders';
+import AccountOrderDetail from '@/pages/account/OrderDetail';
+import AccountWishlist from '@/pages/account/Wishlist';
 const placeholders = [
   { path: 'shop', title: 'Shop', note: 'Full catalog with filters arrives with the product API.' },
   { path: 'categories', title: 'Categories', note: 'Category browsing arrives with the product API.' },
@@ -27,9 +30,8 @@ const placeholders = [
   { path: 'wishlist', title: 'Wishlist', note: 'Wishlist arrives with the commerce engine.' },
 ];
 
-// /account/* — real pages not built yet, but the layout + auth gating are
-// real. Each entry becomes a placeholder child of AccountLayout until the
-// actual page (pages/account/Overview.jsx etc.) replaces it.
+// /account/* — real pages get added to REAL_ACCOUNT_PAGES below as they're built;
+// everything else still falls back to PlaceholderPage.
 const accountPages = [
   { path: '', title: 'Account Overview', note: 'A summary of recent orders and account activity arrives with the orders API.' },
   { path: 'orders', title: 'Your Orders', note: 'Order history arrives with the orders API.' },
@@ -40,6 +42,14 @@ const accountPages = [
   { path: 'security', title: 'Security', note: 'Password + session management arrives with the auth API.' },
   { path: 'notifications', title: 'Notifications', note: 'Notification preferences arrive with the user API.' },
 ];
+
+// Real pages built so far for /account/* — keyed by path, same keys as accountPages above.
+const REAL_ACCOUNT_PAGES = {
+  '': <AccountOverview />,
+  orders: <AccountOrders />,
+  'orders/:orderId': <AccountOrderDetail />,
+  wishlist: <AccountWishlist />,
+};
 
 // /admin/* — same idea: AdminLayout + AdminRoute gating are real, pages
 // are placeholders until pages/admin/*.jsx are built one at a time.
@@ -102,7 +112,7 @@ export const router = createBrowserRouter([
         element: <AccountLayout />,
         children: accountPages.map(({ path, title, note }) => ({
           ...(path === '' ? { index: true } : { path }),
-          element: path === '' ? <AccountOverview /> : <PlaceholderPage title={title} note={note} />,
+          element: REAL_ACCOUNT_PAGES[path] ?? <PlaceholderPage title={title} note={note} />,
           handle: { title },
         })),
       },

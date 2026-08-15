@@ -48,7 +48,13 @@ export function AuthProvider({ children }) {
         }
     }, []);
 
-    const value = { user, isAuthenticated: !!user, isLoading, login, register, logout };
+    // Used after profile edits (Profile.jsx) so the whole app (sidebar,
+    // topbar, etc) reflects the change immediately without a page reload.
+    const updateUser = useCallback((updatedUser) => {
+        setUser(updatedUser);
+    }, []);
+
+    const value = { user, isAuthenticated: !!user, isLoading, login, register, logout, updateUser };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
