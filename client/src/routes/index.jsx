@@ -8,6 +8,7 @@ import AdminRoute from '@/components/common/AdminRoute';
 import Home from '@/pages/customer/Home';
 import PlaceholderPage from '@/pages/customer/PlaceholderPage';
 import Cart from '@/pages/customer/Cart';
+import About from '@/pages/customer/About';
 import Login from '@/pages/auth/Login';
 import Register from '@/pages/auth/Register';
 import ForgotPassword from '@/pages/auth/ForgotPassword';
@@ -41,6 +42,7 @@ const placeholders = [
 // keyed by the same path strings used in `placeholders`.
 const REAL_PAGES = {
   cart: <Cart />,
+  about: <About />,
 };
 
 // /account/* — real pages get added to REAL_ACCOUNT_PAGES below as they're built;
