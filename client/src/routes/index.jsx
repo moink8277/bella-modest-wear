@@ -19,6 +19,7 @@ import AccountOrders from '@/pages/account/Orders';
 import AccountOrderDetail from '@/pages/account/OrderDetail';
 import AccountWishlist from '@/pages/account/Wishlist';
 import AccountProfile from '@/pages/account/Profile';
+import AccountSecurity from '@/pages/account/Security';
 
 const placeholders = [
   { path: 'shop', title: 'Shop', note: 'Full catalog with filters arrives with the product API.' },
@@ -52,6 +53,7 @@ const REAL_ACCOUNT_PAGES = {
   'orders/:orderId': <AccountOrderDetail />,
   wishlist: <AccountWishlist />,
   profile: <AccountProfile />,
+  security: <AccountSecurity />,
 };
 
 // /admin/* — same idea: AdminLayout + AdminRoute gating are real, pages
