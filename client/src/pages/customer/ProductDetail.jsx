@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { PackageX, Heart } from 'lucide-react';
 import Container from '@/components/ui/Container';
 import Breadcrumb from '@/components/ui/Breadcrumb';
@@ -38,6 +38,8 @@ function mapProduct(p) {
 
 export default function ProductDetail() {
     const { slug } = useParams();
+    const navigate = useNavigate();
+    const location = useLocation();
     const toast = useToast();
     const { addItem } = useCart();
     const { isInWishlist, toggleItem } = useWishlist();
@@ -105,9 +107,10 @@ export default function ProductDetail() {
         ? mapProduct({ ...product, image: images[0] })
         : null;
 
-    const handleAddToCart = () => {
+    const handleAddToCart = async () => {
         if (!product || !inStock || needsSelection) return;
-        addItem(
+
+        const result = await addItem(
             {
                 productId: product.id,
                 variantId: selectedVariant?.id,
@@ -120,6 +123,20 @@ export default function ProductDetail() {
             },
             quantity
         );
+
+        if (result.reason === 'auth') {
+            // Guest tried to add to cart — send them to log in first, then
+            // bring them right back here, same pattern as other e-commerce sites.
+            toast.info('Please log in to add items to your cart');
+            navigate('/login', { state: { from: location } });
+            return;
+        }
+
+        if (!result.success) {
+            toast.error(result.message || 'Could not add item to cart');
+            return;
+        }
+
         toast.success('Added to cart');
     };
 

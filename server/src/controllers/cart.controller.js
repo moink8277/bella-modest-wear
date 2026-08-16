@@ -10,9 +10,15 @@ const productModel = require('../models/Product.model');
  * data already joined in getCartWithItems. Never trusts a stored price.
  */
 function withTotals(items) {
+    // mysql2 returns DECIMAL columns (price, sale_price, price_adjustment)
+    // as STRINGS, not numbers. Number(...) here is required — without it,
+    // "7499.00" + "0.00" does string concatenation instead of addition
+    // (e.g. "7499.000.00"), which then multiplies to NaN and silently
+    // renders as ₹0 in the UI via formatPrice's `Number(amount) || 0` fallback.
     const enriched = items.map((item) => {
-        const basePrice = item.sale_price ?? item.price;
-        const unitPrice = basePrice + (item.price_adjustment || 0);
+        const basePrice = Number(item.sale_price ?? item.price);
+        const adjustment = Number(item.price_adjustment || 0);
+        const unitPrice = basePrice + adjustment;
         return { ...item, unitPrice, lineTotal: unitPrice * item.quantity };
     });
     const subtotal = enriched.reduce((sum, item) => sum + item.lineTotal, 0);

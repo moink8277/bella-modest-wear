@@ -4,14 +4,32 @@ import Container from '@/components/ui/Container';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import EmptyState from '@/components/ui/EmptyState';
+import Loader from '@/components/ui/Loader';
+import ErrorState from '@/components/ui/ErrorState';
 import QuantitySelector from '@/components/ui/QuantitySelector';
 import PriceDisplay from '@/components/ui/PriceDisplay';
 import SEO from '@/components/common/SEO';
 import { useCart } from '@/hooks/useCart';
+import { useToast } from '@/context/ToastContext';
 import { formatPrice } from '@/utils/formatPrice';
 
 export default function Cart() {
-    const { items, subtotal, updateQuantity, removeItem } = useCart();
+    const { items, subtotal, isLoading, error, updateQuantity, removeItem } = useCart();
+    const toast = useToast();
+
+    const handleUpdateQuantity = async (itemId, qty) => {
+        const result = await updateQuantity(itemId, qty);
+        if (!result.success) {
+            toast.error(result.message || 'Could not update quantity');
+        }
+    };
+
+    const handleRemove = async (itemId) => {
+        const result = await removeItem(itemId);
+        if (!result.success) {
+            toast.error(result.message || 'Could not remove item');
+        }
+    };
 
     return (
         <Container className="py-12 sm:py-16">
@@ -19,7 +37,11 @@ export default function Cart() {
 
             <h1 className="font-display text-3xl sm:text-4xl text-espresso mb-8">Your Cart</h1>
 
-            {items.length === 0 ? (
+            {isLoading ? (
+                <Loader label="Loading your cart" />
+            ) : error ? (
+                <ErrorState message={error} onRetry={() => window.location.reload()} />
+            ) : items.length === 0 ? (
                 <EmptyState
                     icon={ShoppingBag}
                     title="Your cart is empty"
@@ -63,7 +85,7 @@ export default function Cart() {
                                 <div className="flex flex-col items-end gap-3 shrink-0">
                                     <button
                                         type="button"
-                                        onClick={() => removeItem(item.id)}
+                                        onClick={() => handleRemove(item.id)}
                                         aria-label="Remove from cart"
                                         className="text-muted hover:text-maroon transition-colors"
                                     >
@@ -72,7 +94,7 @@ export default function Cart() {
                                     <QuantitySelector
                                         size="sm"
                                         value={item.quantity}
-                                        onChange={(qty) => updateQuantity(item.id, qty)}
+                                        onChange={(qty) => handleUpdateQuantity(item.id, qty)}
                                     />
                                 </div>
                             </Card>
