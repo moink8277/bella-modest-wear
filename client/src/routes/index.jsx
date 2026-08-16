@@ -24,6 +24,7 @@ import AccountWishlist from '@/pages/account/Wishlist';
 import AccountProfile from '@/pages/account/Profile';
 import AccountSecurity from '@/pages/account/Security';
 import Shop from '@/pages/customer/Shop';
+import Categories from '@/pages/customer/Categories';
 import ProductDetail from '@/pages/customer/ProductDetail';
 
 // Top-level customer pages under MainLayout — real pages get added to
@@ -48,6 +49,7 @@ const REAL_PAGES = {
   about: <About />,
   wishlist: <Wishlist />,
   shop: <Shop />,
+  categories: <Categories />,
   'product/:slug': <ProductDetail />,
 };
 
