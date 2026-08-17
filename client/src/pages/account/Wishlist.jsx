@@ -1,11 +1,22 @@
 import { Heart } from 'lucide-react';
 import ProductCard from '@/components/ui/ProductCard';
 import EmptyState from '@/components/ui/EmptyState';
+import Loader from '@/components/ui/Loader';
+import ErrorState from '@/components/ui/ErrorState';
 import SEO from '@/components/common/SEO';
 import { useWishlist } from '@/hooks/useWishlist';
+import { useToast } from '@/context/ToastContext';
 
 export default function Wishlist() {
-    const { items, removeItem } = useWishlist();
+    const { items, isLoading, error, removeItem } = useWishlist();
+    const toast = useToast();
+
+    const handleRemove = async (productId) => {
+        const result = await removeItem(productId);
+        if (!result.success) {
+            toast.error(result.message || 'Could not remove item');
+        }
+    };
 
     return (
         <div className="flex flex-col gap-6">
@@ -13,7 +24,11 @@ export default function Wishlist() {
 
             <h2 className="font-display text-2xl text-espresso">Your Wishlist</h2>
 
-            {items.length === 0 ? (
+            {isLoading ? (
+                <Loader label="Loading your wishlist" />
+            ) : error ? (
+                <ErrorState message={error} onRetry={() => window.location.reload()} />
+            ) : items.length === 0 ? (
                 <EmptyState
                     icon={Heart}
                     title="Your wishlist is empty"
@@ -28,7 +43,7 @@ export default function Wishlist() {
                             key={product.productId}
                             product={product}
                             isWishlisted
-                            onToggleWishlist={() => removeItem(product.productId)}
+                            onToggleWishlist={() => handleRemove(product.productId)}
                         />
                     ))}
                 </div>

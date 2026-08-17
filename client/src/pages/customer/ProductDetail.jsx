@@ -140,6 +140,18 @@ export default function ProductDetail() {
         toast.success('Added to cart');
     };
 
+    // Wishlist is guest-friendly (localStorage), unlike cart — no auth-gate
+    // reason to check here. toggleItem is async either way (returns a
+    // promise for both the guest-local and logged-in-backend paths), so we
+    // just await it and surface a toast if the backend call failed.
+    const handleToggleWishlist = async (wishlistItem) => {
+        if (!wishlistItem) return;
+        const result = await toggleItem(wishlistItem);
+        if (!result.success) {
+            toast.error(result.message || 'Could not update wishlist');
+        }
+    };
+
     if (isLoading) {
         return (
             <Container className="py-10 sm:py-14">
@@ -249,7 +261,7 @@ export default function ProductDetail() {
                         </Button>
                         <button
                             type="button"
-                            onClick={() => wishlistProduct && toggleItem(wishlistProduct)}
+                            onClick={() => handleToggleWishlist(wishlistProduct)}
                             aria-label={isInWishlist(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}
                             aria-pressed={isInWishlist(product.id)}
                             className="p-3 rounded-[var(--radius-bmw)] border border-border hover:border-gold transition-colors shrink-0"
@@ -275,7 +287,7 @@ export default function ProductDetail() {
                                 key={p.productId}
                                 product={p}
                                 isWishlisted={isInWishlist(p.productId)}
-                                onToggleWishlist={() => toggleItem(p)}
+                                onToggleWishlist={() => handleToggleWishlist(p)}
                             />
                         ))}
                     </div>
