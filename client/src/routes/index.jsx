@@ -23,6 +23,7 @@ import AccountOrderDetail from '@/pages/account/OrderDetail';
 import AccountWishlist from '@/pages/account/Wishlist';
 import AccountProfile from '@/pages/account/Profile';
 import AccountSecurity from '@/pages/account/Security';
+import AccountAddresses from '@/pages/account/Addresses';
 import Shop from '@/pages/customer/Shop';
 import Categories from '@/pages/customer/Categories';
 import ProductDetail from '@/pages/customer/ProductDetail';
@@ -74,6 +75,7 @@ const REAL_ACCOUNT_PAGES = {
   wishlist: <AccountWishlist />,
   profile: <AccountProfile />,
   security: <AccountSecurity />,
+  addresses: <AccountAddresses />,
 };
 
 // /admin/* — same idea: AdminLayout + AdminRoute gating are real, pages
