@@ -14,6 +14,20 @@ const SIZES = {
 export default function Modal({ open, onClose, title, size = 'md', children, footer }) {
     const dialogRef = useRef(null);
 
+    // Focus the dialog only when it first opens — this must NOT depend on
+    // onClose, because onClose is an inline arrow function from the parent
+    // and gets a new reference on every parent re-render (e.g. every
+    // keystroke in a form inside the modal). If this effect depended on
+    // onClose, it would re-run and steal focus back to the dialog container
+    // after every single keystroke, which is exactly the bug this fixes.
+    useEffect(() => {
+        if (!open) return;
+        dialogRef.current?.focus();
+    }, [open]);
+
+    // Keydown listener + body scroll lock. Safe to depend on onClose here —
+    // re-attaching a listener on every render has no visible side effect,
+    // unlike stealing focus.
     useEffect(() => {
         if (!open) return;
 
@@ -22,8 +36,6 @@ export default function Modal({ open, onClose, title, size = 'md', children, foo
         };
         document.addEventListener('keydown', onKeyDown);
         document.body.style.overflow = 'hidden';
-
-        dialogRef.current?.focus();
 
         return () => {
             document.removeEventListener('keydown', onKeyDown);
